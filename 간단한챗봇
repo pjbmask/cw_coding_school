@@ -1,0 +1,15 @@
+print("안녕하세요! 저는 챗봇입니다.")
+name = input("당신의 이름은 무엇인가요? ")
+print(f"반갑습니다, {name}님!")
+
+while True:
+    question = input("무엇이 궁금하신가요? (종료하려면 '끝'이라고 입력하세요) ")
+    if question == "끝":
+        print("대화를 종료합니다. 안녕히 가세요!")
+        break
+    elif "날씨" in question:
+        print("오늘은 맑은 날씨입니다.")
+    elif "좋아하는 것" in question:
+        print("저는 대화하는 것을 좋아해요!")
+    else:
+        print("흥미로운 질문이네요. 더 자세히 설명해 주실 수 있나요?")
