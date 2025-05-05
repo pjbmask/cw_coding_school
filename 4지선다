@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼국지 4지선다 퀴즈</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #8B0000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option:hover {
+            background-color: #eaeaea;
+        }
+        .selected {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+            border-radius: 5px;
+        }
+        .correct-result {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .wrong-result {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #6B0000;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF3CD;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>삼국지 4지선다 퀴즈</h1>
+    <div class="progress">문제 <span id="current-question">1</span>/10</div>
+    <div class="quiz-container" id="quiz">
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div class="result" id="result"></div>
+        <div class="explanation" id="explanation"></div>
+    </div>
+    <button id="next-btn">다음 문제</button>
+    <div class="score" id="score"></div>
+
+    <script>
+        const quizData = [
+            {
+                question: "1. 삼국지에서 유비, 관우, 장비가 복숭아밭에서 의형제를 맺은 고사를 뭐라고 하나요?",
+                options: ["도원결의(桃園結義)", "오장원결의(梧場園結義)", "적벽대전(赤壁大戰)", "삼고초려(三顧草廬)"],
+                correct: 0,
+                explanation: "도원결의(桃園結義)는 유비, 관우, 장비가 복숭아밭에서 하늘에 맹세하고 의형제를 맺은 유명한 고사입니다. 이들은 '같은 날 같은 달에 태어나지 않았으나, 같은 날 죽기를 맹세한다'고 선언했습니다."
+            },
+            {
+                question: "2. 조조가 세운 나라의 이름은 무엇인가요?",
+                options: ["오(吳)", "촉(蜀)", "위(魏)", "진(晉)"],
+                correct: 2,
+                explanation: "조조는 위(魏)나라를 세웠습니다. 삼국시대의 세 나라는 위(魏), 촉(蜀), 오(吳)였으며, 조조의 아들 조비가 공식적으로 위나라의 황제가 되었습니다."
+            },
+            {
+                question: "3. '삼고초려'는 누구를 초빙하기 위해 세 번 찾아간 고사인가요?",
+                options: ["제갈량", "관우", "조조", "여몽"],
+                correct: 0,
+                explanation: "삼고초려(三顧草廬)는 유비가 제갈량(제갈공명)을 영입하기 위해 그의 초가집을 세 번이나 찾아간 고사입니다. 이는 인재를 존중하고 겸손하게 대하는 태도의 상징이 되었습니다."
+            },
+            {
+                question: "4. 적벽대전에서 제갈량의 동남풍을 이용한 계략으로 패배한 군대의 주장은 누구인가요?",
+                options: ["조조", "유비", "손권", "여몽"],
+                correct: 0,
+                explanation: "적벽대전(赤壁大戰)에서 제갈량은 동남풍을 이용한 화공 계략으로 조조의 대군을 크게 패배시켰습니다. 이 전투는 삼국시대의 판도를 결정짓는 중요한 전투였습니다."
+            },
+            {
+                question: "5. '오호장군' 중 하나가 아닌 인물은?",
+                options: ["장비", "마초", "황충", "조운"],
+                correct: 1,
+                explanation: "촉한의 오호장군(五虎將軍)은 관우, 장비, 조운, 황충, 마초가 아닌 마속입니다. 마초는 조조 휘하의 장수였습니다."
+            },
+            {
+                question: "6. 관우가 '청룡언월도'로 베어 죽인 유명한 장수는?",
+                options: ["여포", "화웅", "문추", "하후돈"],
+                correct: 3,
+                explanation: "관우는 하후돈을 청룡언월도로 베어 죽였습니다. 하후돈은 조조의 명장 중 한 명으로, 관우의 용맹함을 보여주는 유명한 장면입니다."
+            },
+            {
+                question: "7. 다음 중 손권이 세운 나라는?",
+                options: ["위(魏)", "촉(蜀)", "오(吳)", "진(晉)"],
+                correct: 2,
+                explanation: "손권은 오(吳)나라를 세웠습니다. 삼국시대의 세 나라는 조조의 위(魏), 유비의 촉(蜀), 손권의 오(吳)였습니다."
+            },
+            {
+                question: "8. '공명의 출사표'에서 제갈량이 북벌을 시작하며 밝힌 목표 국가는?",
+                options: ["오(吳)", "위(魏)", "한(漢)", "진(晉)"],
+                correct: 1,
+                explanation: "제갈량의 출사표(出師表)에서 그는 위(魏)나라를 정벌하겠다는 북벌의 목표를 밝혔습니다. 이는 한나라를 부흥시키기 위한 유비의 유지를 받들기 위함이었습니다."
+            },
+            {
+                question: "9. 삼국시대를 통일한 나라는?",
+                options: ["위(魏)", "촉(蜀)", "오(吳)", "진(晉)"],
+                correct: 3,
+                explanation: "삼국시대는 최종적으로 진(晉)나라에 의해 통일되었습니다. 사마씨 가문이 위나라의 실권을 장악한 후 사마염이 세운 진나라가 263년 촉한을 멸망시키고, 280년 오나라를 멸망시켜 중국을 통일했습니다."
+            },
+            {
+                question: "10. '도화원의 맹세'에서 의형제를 맺은 세 사람 중 가장 먼저 죽은 인물은?",
+                options: ["유비", "관우", "장비", "제갈량"],
+                correct: 1,
+                explanation: "도원결의의 세 의형제 중 가장 먼저 죽은 인물은 관우입니다. 그는 오나라의 여몽과 육손의 계략에 의해 포위된 마성에서 패배하여 처형되었습니다."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const resultElement = document.getElementById('result');
+        const explanationElement = document.getElementById('explanation');
+        const nextButton = document.getElementById('next-btn');
+        const scoreElement = document.getElementById('score');
+        const currentQuestionElement = document.getElementById('current-question');
+
+        function loadQuestion() {
+            answered = false;
+            const current = quizData[currentQuestion];
+            
+            questionElement.innerText = current.question;
+            optionsElement.innerHTML = '';
+            
+            current.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.innerText = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+            
+            resultElement.style.display = 'none';
+            explanationElement.style.display = 'none';
+            currentQuestionElement.innerText = currentQuestion + 1;
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+            
+            answered = true;
+            const options = document.querySelectorAll('.option');
+            const current = quizData[currentQuestion];
+            
+            if (index === current.correct) {
+                options[index].classList.add('correct');
+                resultElement.innerText = '정답입니다!';
+                resultElement.classList.add('correct-result');
+                resultElement.classList.remove('wrong-result');
+                score++;
+            } else {
+                options[index].classList.add('wrong');
+                options[current.correct].classList.add('correct');
+                resultElement.innerText = '오답입니다!';
+                resultElement.classList.add('wrong-result');
+                resultElement.classList.remove('correct-result');
+            }
+            
+            resultElement.style.display = 'block';
+            explanationElement.innerText = current.explanation;
+            explanationElement.style.display = 'block';
+            
+            scoreElement.innerText = `현재 점수: ${score}/${currentQuestion + 1}`;
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestion++;
+            
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                questionElement.innerText = '퀴즈가 종료되었습니다!';
+                optionsElement.innerHTML = '';
+                resultElement.style.display = 'none';
+                explanationElement.style.display = 'none';
+                nextButton.style.display = 'none';
+                scoreElement.innerText = `최종 점수: ${score}/${quizData.length}`;
+            }
+        });
+
+        // 첫 문제 로드
+        loadQuestion();
+    </script>
+</body>
+</html>
