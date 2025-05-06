@@ -5,3 +5,5 @@ print(f"{a} + {b} = {a+b}")
 print(f"{a} - {b} = {a-b}")
 print(f"{a} × {b} = {a*b}")
 print(f"{a} ÷ {b} = {a/b}")
+
+#연습
