@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼국지 4지선다 퀴즈</title>
+    <base target="_top">
+    <style>
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #8B0000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option:hover {
+            background-color: #eaeaea;
+        }
+        .selected {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+            border-radius: 5px;
+        }
+        .correct-result {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .wrong-result {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #6B0000;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF3CD;
+            border-radius: 5px;
+            display: none;
+        }
+        #status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            margin: 50px 0;
+            font-size: 18px;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>삼국지 4지선다 퀴즈</h1>
+    <div id="loading" class="loading">문제를 불러오는 중입니다...</div>
+    <div id="quiz-content" style="display: none;">
+        <div class="progress">문제 <span id="current-question">1</span>/<span id="total-questions">0</span></div>
+        <div class="quiz-container" id="quiz">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="result" id="result"></div>
+            <div class="explanation" id="explanation"></div>
+        </div>
+        <button id="next-btn">다음 문제</button>
+        <div class="score" id="score"></div>
+        <div id="status-message"></div>
+    </div>
+    <div id="debug-info" class="debug-info"></div>
+
+    <script>
+        // 스프레드시트에서 가져온 퀴즈 데이터를 저장할 변수
+        let quizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const resultElement = document.getElementById('result');
+        const explanationElement = document.getElementById('explanation');
+        const nextButton = document.getElementById('next-btn');
+        const scoreElement = document.getElementById('score');
+        const currentQuestionElement = document.getElementById('current-question');
+        const statusMessageElement = document.getElementById('status-message');
+        const loadingElement = document.getElementById('loading');
+        const quizContentElement = document.getElementById('quiz-content');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const debugInfoElement = document.getElementById('debug-info');
+
+        // 디버깅 정보 표시 함수
+        function showDebugInfo(info) {
+            debugInfoElement.textContent = JSON.stringify(info, null, 2);
+            debugInfoElement.style.display = 'block';
+        }
+
+        // 서버에서 퀴즈 데이터 가져오기
+        function fetchQuizData() {
+            google.script.run
+                .withSuccessHandler(function(data) {
+                    try {
+                        // 데이터 로드 성공
+                        quizData = data;
+                        
+                        // 데이터 포맷 변경 - 스프레드시트 형식에 맞춤
+                        quizData = quizData.map(item => {
+                            return {
+                                question: item.question,
+                                options: [item.option1, item.option2, item.option3, item.option4],
+                                correct: Number(item.correct),
+                                explanation: item.explanation
+                            };
+                        });
+                        
+                        // 전체 문제 수 표시
+                        totalQuestionsElement.innerText = quizData.length;
+                        
+                        // 첫 번째 문제 로드
+                        loadQuestion();
+                        
+                        // 로딩 숨기고, 퀴즈 표시
+                        loadingElement.style.display = 'none';
+                        quizContentElement.style.display = 'block';
+                    } catch (e) {
+                        console.error('퀴즈 데이터 처리 오류:', e);
+                        loadingElement.innerText = '문제 데이터 처리 중 오류가 발생했습니다.';
+                        showDebugInfo({error: e.toString(), data: data});
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('퀴즈 데이터 로드 오류:', error);
+                    loadingElement.innerText = '문제를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.';
+                    showDebugInfo({error: error});
+                })
+                .getQuizData(); // 서버의 함수 이름, Code.gs에 정의해야 함
+        }
+
+        function loadQuestion() {
+            if (!quizData || quizData.length === 0) {
+                loadingElement.innerText = '문제 데이터가 없습니다.';
+                return;
+            }
+            
+            answered = false;
+            const current = quizData[currentQuestion];
+            
+            questionElement.innerText = current.question;
+            optionsElement.innerHTML = '';
+            
+            current.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.innerText = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+            
+            resultElement.style.display = 'none';
+            explanationElement.style.display = 'none';
+            currentQuestionElement.innerText = currentQuestion + 1;
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+            
+            answered = true;
+            const options = document.querySelectorAll('.option');
+            const current = quizData[currentQuestion];
+            
+            if (index === current.correct) {
+                options[index].classList.add('correct');
+                resultElement.innerText = '정답입니다!';
+                resultElement.classList.add('correct-result');
+                resultElement.classList.remove('wrong-result');
+                score++;
+            } else {
+                options[index].classList.add('wrong');
+                options[current.correct].classList.add('correct');
+                resultElement.innerText = '오답입니다!';
+                resultElement.classList.add('wrong-result');
+                resultElement.classList.remove('correct-result');
+            }
+            
+            resultElement.style.display = 'block';
+            explanationElement.innerText = current.explanation;
+            explanationElement.style.display = 'block';
+            
+            scoreElement.innerText = `현재 점수: ${score}/${currentQuestion + 1}`;
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestion++;
+
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                questionElement.innerText = '퀴즈가 종료되었습니다!';
+                optionsElement.innerHTML = '';
+                resultElement.style.display = 'none';
+                explanationElement.style.display = 'none';
+                nextButton.style.display = 'none';
+                scoreElement.innerText = `최종 점수: ${score}/${quizData.length}`;
+                
+                // 결과 저장 함수 호출
+                sendResultsToSheet(score, quizData.length);
+            }
+        });
+        
+        function sendResultsToSheet(finalScore, totalQuestions) {
+            // 상태 메시지 표시
+            showStatusMessage('결과를 저장 중입니다...', false);
+            
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    showStatusMessage('결과가 성공적으로 저장되었습니다!', true);
+                })
+                .withFailureHandler(function(error) {
+                    console.error('결과 저장 오류:', error);
+                    showStatusMessage('결과 저장 중 오류가 발생했습니다.', false);
+                    showDebugInfo({error: error});
+                })
+                .saveQuizResult(finalScore, totalQuestions);
+        }
+        
+        function showStatusMessage(message, isSuccess) {
+            statusMessageElement.innerText = message;
+            statusMessageElement.style.display = 'block';
+            
+            if (isSuccess) {
+                statusMessageElement.className = 'success-message';
+            } else {
+                statusMessageElement.className = 'error-message';
+            }
+        }
+
+        // 페이지 로드 시 퀴즈 데이터 가져오기
+        window.onload = fetchQuizData;
+    </script>
+</body>
+</html>
