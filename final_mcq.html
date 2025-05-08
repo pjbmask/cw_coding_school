@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Control Quiz</title>
+    <base target="_top">
+    <style>
+        body {
+            font-family: 'Malgun Gothic', 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #8B0000;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-container, .quiz-container, .language-container, .result-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .language-options {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .language-option {
+            margin: 0 10px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .language-option:hover {
+            background-color: #e0e0e0;
+        }
+        .language-option.selected {
+            background-color: #8B0000;
+            color: white;
+            border-color: #8B0000;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option:hover {
+            background-color: #eaeaea;
+        }
+        .selected-option { /* Changed class name to avoid conflict */
+            background-color: #d4edda; /* Light green */
+            border-color: #c3e6cb;
+        }
+        .correct {
+            background-color: #d4edda; /* Light green */
+            border-color: #c3e6cb;
+        }
+        .wrong {
+            background-color: #f8d7da; /* Light red */
+            border-color: #f5c6cb;
+        }
+         .option.disabled {
+             pointer-events: none; /* Disable clicking after answer */
+             opacity: 0.7; /* Visually indicate disabled */
+           }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            display: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .correct-result {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .wrong-result {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #6B0000;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .score, .final-score, .quiz-status { /* Added .final-score and .quiz-status */
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+         .quiz-status.pass {
+             color: #155724; /* Dark green */
+           }
+           .quiz-status.fail {
+             color: #721c24; /* Dark red */
+           }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF3CD; /* Light yellow */
+            border-radius: 5px;
+            display: none;
+            font-size: 14px;
+        }
+        #status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            margin: 50px 0;
+            font-size: 18px;
+        }
+        .hidden {
+            display: none;
+        }
+        /* Added style for user info on results screen */
+        .user-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .user-info p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .user-info span:first-child {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="language-section">
+        <h1 id="header-select-language">Select Language / 选择语言 / 언어 선택</h1>
+        <div class="language-container">
+            <div class="language-options">
+                <div class="language-option" data-lang="en">English</div>
+                <div class="language-option" data-lang="zh">中文</div>
+                <div class="language-option" data-lang="ko">한국어</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-section" class="hidden">
+        <h1 id="header-login"></h1>
+        <div class="login-container">
+            <div class="form-group">
+                <label for="name" id="label-name"></label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="employee-id" id="label-employee-id"></label>
+                <input type="text" id="employee-id" required>
+            </div>
+            <div class="form-group">
+                <label for="company" id="label-company"></label>
+                <input type="text" id="company" required>
+            </div>
+            <button id="login-btn"></button>
+        </div>
+    </div>
+
+    <div id="quiz-section" class="hidden">
+        <h1 id="header-quiz"></h1>
+        <div id="loading" class="loading"></div>
+        <div id="quiz-content" style="display: none;">
+            <div class="progress"><span id="progress-text"></span> <span id="current-question">1</span>/<span id="total-questions">0</span></div>
+            <div class="quiz-container" id="quiz">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div class="result" id="result"></div>
+                <div class="explanation" id="explanation"></div>
+            </div>
+            <button id="next-btn"></button>
+            <div class="score" id="score"></div>
+            <div id="status-message"></div>
+        </div>
+    </div>
+
+    <div id="quiz-results-section" class="hidden">
+         <h1 id="header-quiz-complete"></h1>
+         <div class="result-container">
+             <div class="user-info">
+                 <p><span id="display-name-label"></span>: <span id="display-name"></span></p>
+                 <p><span id="display-employee-id-label"></span>: <span id="display-employee-id"></span></p>
+                 <p><span id="display-company-label"></span>: <span id="display-company"></span></p>
+             </div>
+             <div id="final-score" class="final-score"></div>
+             <div id="quiz-status" class="quiz-status"></div>
+             <div id="save-status-message"></div>
+         </div>
+    </div>
+
+
+    <script>
+        // Language translations
+        const translations = {
+            en: {
+                headerSelectLanguage: "Select Language",
+                headerLogin: "Internal Control Education Quiz",
+                headerQuiz: "Internal Control Quiz",
+                headerQuizComplete: "Quiz Completed", // Added
+                labelName: "Name",
+                labelEmployeeId: "Employee ID",
+                labelCompany: "Company Name",
+                loginButton: "Start Quiz",
+                loadingText: "Loading questions...",
+                nextButton: "Next Question",
+                progressText: "Question",
+                correctAnswer: "Correct!",
+                wrongAnswer: "Incorrect!",
+                quizComplete: "Quiz Completed!", // Redundant, using headerQuizComplete
+                finalScore: "Final Score: ",
+                currentScore: "Current Score: ",
+                savingResults: "Saving results...",
+                saveSuccess: "Results saved successfully!",
+                saveError: "Error saving results.",
+                emptyFields: "Please fill in all fields.",
+                noQuestions: "No questions available for this language.",
+                serverErrorFetch: "Error fetching quiz data from server: ",
+                serverErrorSave: "Error saving quiz results to server: ",
+                passStatus: "Test Passed", // Added
+                failStatus: "Retake Required", // Added
+                correctAnswerLabel: "Correct Answer:" // Added translation for correct answer label
+            },
+            zh: {
+                headerSelectLanguage: "选择语言",
+                headerLogin: "内部控制教育测验",
+                headerQuiz: "内部控制测验",
+                headerQuizComplete: "测验完成", // Added
+                labelName: "姓名",
+                labelEmployeeId: "员工号",
+                labelCompany: "公司名称",
+                loginButton: "开始测验",
+                loadingText: "加载问题中...",
+                nextButton: "下一题",
+                progressText: "问题",
+                correctAnswer: "正确！",
+                wrongAnswer: "错误！",
+                quizComplete: "测验完成！", // Redundant, using headerQuizComplete
+                finalScore: "最终得分: ",
+                currentScore: "当前得分: ",
+                savingResults: "保存结果中...",
+                saveSuccess: "结果保存成功！",
+                saveError: "保存结果时出错。",
+                emptyFields: "请填写所有字段。",
+                noQuestions: "此语言没有可用问题。",
+                serverErrorFetch: "从服务器获取测验数据时出错：",
+                serverErrorSave: "将测验结果保存到服务器时出错：",
+                passStatus: "考试通过", // Added
+                failStatus: "需要重考", // Added
+                correctAnswerLabel: "正确答案:" // Added translation for correct answer label
+            },
+            ko: {
+                headerSelectLanguage: "언어 선택",
+                headerLogin: "내부통제 교육내용 확인 퀴즈",
+                headerQuiz: "내부통제 퀴즈",
+                headerQuizComplete: "퀴즈 종료", // Added
+                labelName: "이름",
+                labelEmployeeId: "사번",
+                labelCompany: "법인명",
+                loginButton: "퀴즈 시작하기",
+                loadingText: "문제를 불러오는 중입니다...",
+                nextButton: "다음 문제",
+                progressText: "문제",
+                correctAnswer: "정답입니다!",
+                wrongAnswer: "오답입니다!",
+                quizComplete: "퀴즈가 종료되었습니다!", // Redundant, using headerQuizComplete
+                finalScore: "최종 점수: ",
+                currentScore: "현재 점수: ",
+                savingResults: "결과를 저장 중입니다...",
+                saveSuccess: "결과가 성공적으로 저장되었습니다!",
+                saveError: "결과 저장 중 오류가 발생했습니다.",
+                emptyFields: "모든 정보를 입력해주세요.",
+                noQuestions: "해당 언어에 대한 문제 데이터가 없습니다.",
+                serverErrorFetch: "서버에서 퀴즈 데이터를 가져오는 중 오류가 발생했습니다: ",
+                serverErrorSave: "서버에 퀴즈 결과를 저장하는 중 오류가 발생했습니다: ",
+                passStatus: "시험 통과", // Added
+                failStatus: "재시험 필요", // Added
+                correctAnswerLabel: "정답:" // Added translation for correct answer label
+            }
+        };
+
+        // User information variables
+        let userName = '';
+        let employeeId = '';
+        let companyName = '';
+        let selectedLanguage = '';
+
+        // Quiz data variables
+        let quizData = []; // Stores the questions for the current quiz session
+        let allQuizData = []; // Stores all questions fetched from the sheet
+        const numberOfQuestionsToShow = 5; // N value for random selection
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        let userAnswers = []; // Array to store user answers (0-based index)
+
+        // DOM elements - Moved to the top
+        const languageSection = document.getElementById('language-section');
+        const loginSection = document.getElementById('login-section');
+        const quizSection = document.getElementById('quiz-section');
+        const quizResultsSection = document.getElementById('quiz-results-section');
+        const languageOptions = document.querySelectorAll('.language-option');
+        const loginButton = document.getElementById('login-btn');
+        const nameInput = document.getElementById('name');
+        const employeeIdInput = document.getElementById('employee-id');
+        const companyInput = document.getElementById('company');
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const resultElement = document.getElementById('result');
+        const explanationElement = document.getElementById('explanation');
+        const nextButton = document.getElementById('next-btn');
+        const scoreElement = document.getElementById('score');
+        const currentQuestionElement = document.getElementById('current-question');
+        const statusMessageElement = document.getElementById('status-message');
+        const saveStatusMessageElement = document.getElementById('save-status-message');
+        const loadingElement = document.getElementById('loading');
+        const quizContentElement = document.getElementById('quiz-content');
+        const totalQuestionsElement = document.getElementById('total-questions');
+
+        // Elements for language texts - Moved to the top
+        const headerLoginElement = document.getElementById('header-login');
+        const headerQuizElement = document.getElementById('header-quiz');
+        const headerQuizCompleteElement = document.getElementById('header-quiz-complete');
+        const labelNameElement = document.getElementById('label-name');
+        const labelEmployeeIdElement = document.getElementById('label-employee-id');
+        const labelCompanyElement = document.getElementById('label-company');
+        const finalScoreElement = document.getElementById('final-score');
+        const quizStatusElement = document.getElementById('quiz-status');
+        const progressTextElement = document.getElementById('progress-text');
+
+        // Elements for displaying user info on results screen (Added)
+        const displayNameLabelElement = document.getElementById('display-name-label');
+        const displayNameElement = document.getElementById('display-name');
+        const displayEmployeeIdLabelElement = document.getElementById('display-employee-id-label');
+        const displayEmployeeIdElement = document.getElementById('display-employee-id');
+        const displayCompanyLabelElement = document.getElementById('display-company-label');
+        const displayCompanyElement = document.getElementById('display-company');
+
+
+
+        // Update UI text based on selected language
+        function updateUILanguage(lang) {
+            const texts = translations[lang];
+
+            // Update login section
+            headerLoginElement.innerText = texts.headerLogin;
+            headerQuizElement.innerText = texts.headerQuiz;
+            headerQuizCompleteElement.innerText = texts.headerQuizComplete;
+            labelNameElement.innerText = texts.labelName;
+            labelEmployeeIdElement.innerText = texts.labelEmployeeId;
+            labelCompanyElement.innerText = texts.labelCompany;
+            loginButton.innerText = texts.loginButton;
+
+            // Update quiz section
+            loadingElement.innerText = texts.loadingText;
+            nextButton.innerText = texts.nextButton;
+            progressTextElement.innerText = texts.progressText;
+
+            // Update score and status text (if visible)
+            scoreElement.innerText = `${texts.currentScore} ${score}/${currentQuestion}`;
+            finalScoreElement.innerText = `${texts.finalScore} ${score}/${quizData.length}`;
+             // Set labels for results section user info
+             displayNameLabelElement.innerText = texts.labelName;
+             displayEmployeeIdLabelElement.innerText = texts.labelEmployeeId;
+             displayCompanyLabelElement.innerText = texts.labelCompany;
+             // Status text will be set in endQuiz
+        }
+
+        // Language selection event handling
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                console.log('Language option clicked:', this.getAttribute('data-lang'));
+
+                // Remove selection from all options
+                languageOptions.forEach(opt => opt.classList.remove('selected'));
+
+                // Add selection to clicked option
+                this.classList.add('selected');
+
+                // Store selected language
+                selectedLanguage = this.getAttribute('data-lang');
+
+                // Update UI text for selected language
+                updateUILanguage(selectedLanguage);
+
+                // Hide language section and show login section
+                languageSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+            });
+        });
+
+        // Login button event handling
+        loginButton.addEventListener('click', function() {
+            userName = nameInput.value.trim();
+            employeeId = employeeIdInput.value.trim();
+            companyName = companyInput.value.trim();
+
+            // Validate inputs
+            if (!userName || !employeeId || !companyName) {
+                alert(translations[selectedLanguage].emptyFields); // Using browser alert for simplicity here
+                return;
+            }
+
+            // Hide login screen and show quiz screen
+            loginSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            quizResultsSection.classList.add('hidden'); // Ensure results section is hidden
+
+            // Show loading message
+            loadingElement.style.display = 'block';
+            quizContentElement.style.display = 'none';
+            showStatusMessage('', false); // Clear previous status messages
+            showSaveStatusMessage('', false); // Clear previous save status messages
+
+
+            // Get quiz data
+            fetchQuizData();
+        });
+
+        // Fetch quiz data from server
+        function fetchQuizData() {
+            google.script.run
+                .withSuccessHandler(function(data) {
+                    try {
+                        // Store all fetched data
+                        allQuizData = data;
+
+                        // Filter questions by selected language
+                        const languageData = allQuizData.filter(item => item.language === selectedLanguage);
+
+                        if (languageData.length === 0) {
+                            loadingElement.innerText = translations[selectedLanguage].noQuestions;
+                            loadingElement.style.display = 'block';
+                            quizContentElement.style.display = 'none';
+                             nextButton.style.display = 'none'; // Hide next button
+                            return;
+                        }
+
+                        // Data loaded successfully
+                        // Format data for use - adjust to spreadsheet format
+                        // Ensure correct is treated as a number
+                        let formattedData = languageData.map(item => {
+                            return {
+                                id: item.question_id,
+                                question: item.question,
+                                options: [item.option1, item.option2, item.option3, item.option4],
+                                correct: Number(item.correct)-1, // Ensure it's a number (0-3)
+                                explanation: item.explanation
+                            };
+                        });
+
+                        // Implement random selection: If more than 10 questions, shuffle and take 10. Otherwise, take all.
+                        if (formattedData.length > numberOfQuestionsToShow) {
+                            formattedData = shuffleArray(formattedData).slice(0, numberOfQuestionsToShow);
+                        } else {
+                            // If less than or equal to 10, still shuffle for randomness
+                            formattedData = shuffleArray(formattedData);
+                        }
+
+                        quizData = formattedData; // Set the quizData to the selected subset
+
+                        // Initialize user answers array based on the selected questions
+                        userAnswers = new Array(quizData.length).fill(null);
+
+                        // Display total questions
+                        totalQuestionsElement.innerText = quizData.length;
+
+                        // Load first question
+                        currentQuestion = 0; // Reset current question index
+                        score = 0; // Reset score
+                        loadQuestion();
+
+                        // Hide loading, show quiz
+                        loadingElement.style.display = 'none';
+                        quizContentElement.style.display = 'block';
+                        scoreElement.innerText = `${translations[selectedLanguage].currentScore} ${score}/${currentQuestion}`; // Update initial score display
+                         nextButton.style.display = 'block'; // Ensure next button is visible
+
+
+                    } catch (e) {
+                        console.error('Quiz data processing error:', e);
+                        loadingElement.innerText = 'Error processing quiz data: ' + e.message;
+                        loadingElement.style.display = 'block';
+                        quizContentElement.style.display = 'none';
+                         nextButton.style.display = 'none'; // Hide next button
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Quiz data loading error:', error);
+                    loadingElement.innerText = translations[selectedLanguage].serverErrorFetch + (error.message || error.toString());
+                    loadingElement.style.display = 'block';
+                    quizContentElement.style.display = 'none';
+                     nextButton.style.display = 'none'; // Hide next button
+                })
+                .getQuizData(); // Server function name, must be defined in Code.gs
+        }
+
+        // Function to shuffle array (for randomizing questions)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            if (!quizData || quizData.length === 0 || currentQuestion >= quizData.length) {
+                 // This case should ideally not be reached if fetchQuizData works correctly
+                loadingElement.innerText = translations[selectedLanguage].noQuestions;
+                loadingElement.style.display = 'block';
+                quizContentElement.style.display = 'none';
+                 nextButton.style.display = 'none'; // Hide next button
+                return;
+            }
+
+            answered = false;
+            const current = quizData[currentQuestion];
+
+            questionElement.innerText = current.question;
+            optionsElement.innerHTML = '';
+
+            current.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                // Display options with 1-based numbering
+                optionElement.innerText = `${index + 1}. ${option}`;
+                // Store the 0-based index in a data attribute for easy retrieval
+                optionElement.setAttribute('data-index', index);
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+
+            resultElement.style.display = 'none';
+            explanationElement.style.display = 'none';
+            currentQuestionElement.innerText = currentQuestion + 1;
+             scoreElement.innerText = `${translations[selectedLanguage].currentScore} ${score}/${currentQuestion}`; // Update score display before answering
+             nextButton.disabled = true; // Disable next button until answered
+        }
+
+        function selectOption(selectedIndex) { // Renamed parameter for clarity
+            if (answered) return;
+
+            answered = true;
+            const options = document.querySelectorAll('.option');
+            const current = quizData[currentQuestion];
+
+             // Disable all options after one is selected
+             options.forEach(option => option.classList.add('disabled'));
+
+
+            // Get the selected option element using the data attribute
+            const selectedOptionElement = optionsElement.querySelector(`.option[data-index='${selectedIndex}']`);
+
+            // Save user answer with question ID (using 0-based index)
+            userAnswers[currentQuestion] = {
+                questionId: current.id,             // Save the question ID from database
+                questionNumber: currentQuestion + 1, // Save 1-based question number
+                userAnswer: selectedIndex,          // User answer index (0-3)
+                correctAnswer: current.correct,   // Correct answer index (0-3)
+                isCorrect: selectedIndex === current.correct
+            };
+
+
+            const texts = translations[selectedLanguage];
+
+            if (selectedIndex === current.correct) {
+                selectedOptionElement.classList.add('correct');
+                resultElement.innerText = texts.correctAnswer;
+                resultElement.classList.add('correct-result');
+                resultElement.classList.remove('wrong-result');
+                score++;
+            } else {
+                selectedOptionElement.classList.add('wrong');
+                // Highlight the correct answer (using 0-based index from data)
+                const correctOptionElement = optionsElement.querySelector(`.option[data-index='${current.correct}']`);
+                if (correctOptionElement) {
+                    correctOptionElement.classList.add('correct');
+                }
+                resultElement.innerText = texts.wrongAnswer;
+                resultElement.classList.add('wrong-result');
+                resultElement.classList.remove('correct-result');
+            }
+
+            resultElement.style.display = 'block';
+            // Display explanation using the translated label
+            explanationElement.innerText = `${texts.correctAnswerLabel} ${current.correct + 1}. ${current.options[current.correct]}\n\n${current.explanation}`;
+            explanationElement.style.display = 'block';
+            scoreElement.innerText = `${texts.currentScore} ${score}/${currentQuestion + 1}`; // Update score display after answering
+            nextButton.disabled = false; // Enable next button after answering
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        });
+
+        function endQuiz() {
+            const texts = translations[selectedLanguage];
+
+            // Hide quiz section, show results section
+            quizSection.classList.add('hidden');
+            quizResultsSection.classList.remove('hidden');
+
+            // Display user information
+            displayNameElement.innerText = userName;
+            displayEmployeeIdElement.innerText = employeeId;
+            displayCompanyElement.innerText = companyName;
+
+            // Calculate percentage and determine status
+            const totalQuestions = quizData.length;
+            const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+            const quizStatus = percentage >= 60 ? texts.passStatus : texts.failStatus;
+
+
+            // Display final score and status
+            finalScoreElement.innerText = `${texts.finalScore} ${score}/${totalQuestions} (${percentage}%)`;
+            quizStatusElement.innerText = quizStatus;
+            quizStatusElement.classList.remove('pass', 'fail'); // Clear previous status classes
+            quizStatusElement.classList.add(percentage >= 60 ? 'pass' : 'fail');
+
+
+            // Save results to spreadsheet
+            saveResults();
+        }
+
+        function saveResults() {
+            const texts = translations[selectedLanguage];
+            showSaveStatusMessage(texts.savingResults, false); // Show saving message
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    console.log('Save result success:', response);
+                    if (response.status === 'success') {
+                        showSaveStatusMessage(texts.saveSuccess, true); // Show success message
+                    } else {
+                        showSaveStatusMessage(texts.saveError + (response.message || ''), false); // Show error message
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Save result error:', error);
+                    showSaveStatusMessage(texts.saveError + (error.message || error.toString()), false); // Show error message
+                })
+                .saveQuizResult(userName, employeeId, companyName, score, quizData.length, userAnswers, selectedLanguage); // Server function name
+        }
+
+        // Function to show status messages (used for fetch errors)
+        function showStatusMessage(message, isSuccess) {
+            statusMessageElement.innerText = message;
+            statusMessageElement.className = ''; // Clear existing classes
+            statusMessageElement.classList.add('status-message');
+            statusMessageElement.classList.add(isSuccess ? 'success-message' : 'error-message');
+            statusMessageElement.style.display = message ? 'block' : 'none';
+        }
+
+         // Function to show save status messages (newly added)
+        function showSaveStatusMessage(message, isSuccess) {
+            saveStatusMessageElement.innerText = message;
+            saveStatusMessageElement.className = ''; // Clear existing classes
+            saveStatusMessageElement.classList.add('status-message'); // Use the same style class
+            saveStatusMessageElement.classList.add(isSuccess ? 'success-message' : 'error-message');
+            saveStatusMessageElement.style.display = message ? 'block' : 'none';
+        }
+
+
+        // Initial state: Show language selection
+        languageSection.classList.remove('hidden');
+        loginSection.classList.add('hidden');
+        quizSection.classList.add('hidden');
+        quizResultsSection.classList.add('hidden'); // Ensure results section is hidden initially
+
+    </script>
+</body>
+</html>
