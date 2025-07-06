@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>축구선수 룰렛</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+  }
+  .roulette-container {
+    text-align: center;
+  }
+  canvas {
+    border: 10px solid #333;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  h1 {
+    color: #333;
+  }
+</style>
+</head>
+<body>
+
+<div class="roulette-container">
+  <h1>축구선수 룰렛</h1>
+  <canvas id="roulette" width="500" height="500"></canvas>
+  <br>
+  <button id="spin-button">돌리기</button>
+</div>
+
+<script>
+const canvas = document.getElementById('roulette');
+const ctx = canvas.getContext('2d');
+const spinButton = document.getElementById('spin-button');
+
+const options = [
+  "리오넬 메시",
+  "크리스티아누 호날두",
+  "네이마르 주니어",
+  "킬리안 음바페",
+  "케빈 더 브라위너",
+  "로베르트 레반도프스키",
+  "해리 케인",
+  "손흥민"
+];
+
+const arc = Math.PI / (options.length / 2);
+let startAngle = 0;
+let spinTimeout = null;
+let spinArcStart = 10;
+let spinTime = 0;
+let spinTimeTotal = 0;
+
+const colors = ["#FFDDC1", "#FFABAB", "#FFC3A0", "#FF677D", "#D4A5A5", "#392F5A", "#31A2AC", "#61C0BF"];
+
+function drawRoulette() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.font = '16px sans-serif';
+
+  for (let i = 0; i < options.length; i++) {
+    const angle = startAngle + i * arc;
+    ctx.fillStyle = colors[i % colors.length];
+
+    ctx.beginPath();
+    ctx.arc(250, 250, 240, angle, angle + arc, false);
+    ctx.arc(250, 250, 0, angle + arc, angle, true);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.save();
+    ctx.fillStyle = "black";
+    ctx.translate(250 + Math.cos(angle + arc / 2) * 150, 250 + Math.sin(angle + arc / 2) * 150);
+    ctx.rotate(angle + arc / 2 + Math.PI / 2);
+    const text = options[i];
+    ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+    ctx.restore();
+  }
+
+  // Arrow
+  ctx.fillStyle = "black";
+  ctx.beginPath();
+  ctx.moveTo(250 - 4, 250 - (240 + 5));
+  ctx.lineTo(250 + 4, 250 - (240 + 5));
+  ctx.lineTo(250 + 4, 250 - (240 - 5));
+  ctx.lineTo(250 + 9, 250 - (240 - 5));
+  ctx.lineTo(250 + 0, 250 - (240 - 13));
+  ctx.lineTo(250 - 9, 250 - (240 - 5));
+  ctx.lineTo(250 - 4, 250 - (240 - 5));
+  ctx.lineTo(250 - 4, 250 - (240 + 5));
+  ctx.fill();
+}
+
+function rotate() {
+  spinTime += 30;
+  if(spinTime >= spinTimeTotal) {
+    stopRotate();
+    return;
+  }
+  const spinAngle = spinArcStart - easeOut(spinTime, 0, spinArcStart, spinTimeTotal);
+  startAngle += (spinAngle * Math.PI / 180);
+  drawRoulette();
+  spinTimeout = setTimeout(rotate, 30);
+}
+
+function stopRotate() {
+  clearTimeout(spinTimeout);
+  const degrees = startAngle * 180 / Math.PI + 90;
+  const arcd = arc * 180 / Math.PI;
+  const index = Math.floor((360 - degrees % 360) / arcd);
+  ctx.save();
+  ctx.font = 'bold 30px sans-serif';
+  const text = options[index]
+  ctx.fillText(text, 250 - ctx.measureText(text).width / 2, 250 + 10);
+  ctx.restore();
+  spinButton.disabled = false;
+}
+
+function easeOut(t, b, c, d) {
+  const ts = (t/=d)*t;
+  const tc = ts*t;
+  return b+c*(tc + -3*ts + 3*t);
+}
+
+
+spinButton.addEventListener('click', () => {
+  spinButton.disabled = true;
+  // 최소 3회전(1080도) 이상 빠르게 회전하도록 수정
+  spinArcStart = Math.random() * 30 + 40; // 더 빠른 시작 각속도
+  spinTime = 0;
+  // 최소 3회전(3*360=1080도) 이상, 빠른 속도로 2~2.5초 내에 멈추도록
+  spinTimeTotal = Math.random() * 600 + 3000; // 2~2.5초
+  rotate();
+});
+
+drawRoulette();
+</script>
+
+</body>
+</html>
